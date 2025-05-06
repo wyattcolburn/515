@@ -32,7 +32,7 @@ uint8_t y_cord;
 bool messageReady;
 
 char UART_MESSAGE[MAX_MESSAGE_SIZE];
-
+uint16_t SPI_REC;
 int main(void)
 {
   /* USER CODE BEGIN 1 */
@@ -59,6 +59,11 @@ int main(void)
 	messageReady = false;
 
       }
+    SPI_REC = SPI_Read_From_Peer();
+    if (SPI_REC) {
+	print_uint16(SPI_REC);
+
+    }
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */

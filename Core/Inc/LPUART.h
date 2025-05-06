@@ -37,5 +37,6 @@ void LPUART_Init(void);
 void LPUART_Print(const char* message);
 void LPUART_ESC_Print(const char* message);
 void delay_us(const uint32_t);
+void print_uint16(uint16_t value);
 
 #endif /* INC_LPUART_H_ */

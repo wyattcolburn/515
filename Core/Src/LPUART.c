@@ -107,3 +107,13 @@ void LPUART1_IRQHandler( void  ) {
 	}  // end switch
    }
 }
+
+void print_uint16(uint16_t value) {
+    char buffer[10]; // Buffer large enough to hold any uint16_t value as string
+
+    // Format the number as a string
+    sprintf(buffer, "%u", value);
+
+    // Print the string
+    LPUART_Print(buffer);
+}
