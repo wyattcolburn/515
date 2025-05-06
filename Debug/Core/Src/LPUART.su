@@ -1,0 +1,4 @@
+../Core/Src/LPUART.c:27:6:LPUART_Init	8	static,ignoring_inline_asm
+../Core/Src/LPUART.c:68:6:LPUART_Print	24	static
+../Core/Src/LPUART.c:78:6:LPUART_ESC_Print	24	static
+../Core/Src/LPUART.c:84:6:LPUART1_IRQHandler	16	static
