@@ -19,6 +19,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "LPUART.h"
+#include "spi.h"
 
 #define USARTDIV 693 //80 MHz clock, baudrate 115200
 
@@ -51,7 +52,8 @@ int main(void)
   /* Configure the system clock */
   SystemClock_Config();
   LPUART_Init();
-
+  SPI_Slave_Init();
+  LPUART_Print("hello world");
   while (1)
   {
     if (messageReady) {
@@ -61,7 +63,7 @@ int main(void)
       }
     SPI_REC = SPI_Read_From_Peer();
     if (SPI_REC) {
-	print_uint16(SPI_REC);
+  	print_uint16(SPI_REC);
 
     }
     /* USER CODE BEGIN 3 */
