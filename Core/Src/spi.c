@@ -5,6 +5,9 @@
 
 extern bool dataReceived;
 extern uint16_t SPI_ReceivedData;
+
+
+
 void SPI_Master_Init( void) {
   RCC->APB2ENR |= RCC_APB2ENR_SPI1EN;
   RCC->AHB2ENR |= (RCC_AHB2ENR_GPIOAEN | RCC_AHB2ENR_GPIOEEN);
@@ -96,6 +99,7 @@ void SPI2_IRQHandler(void){
   if (SPI2->SR & SPI_SR_RXNE) {
       SPI_ReceivedData = SPI2->DR;
       dataReceived = true;
+
   }
 }
 
@@ -107,11 +111,47 @@ uint16_t SPI_Read_From_Peer(void) {
     return SPI2->DR;
 }
 
+void SPI_Send_Packet(uint16_t *data, uint16_t data_size) { //first item of the array
+
+  bool sending;
+  sending = true;
+  size_t amount_to_send = data_size;
+
+  while (sending) {
+
+      if (amount_to_send == 0) {
+	  break;
+      }
+
+      size_t bytes_sending = min(MAX_DATA_SIZE, amount_to_send);
+
+      SPI_Packet current_packet;
+      current_packet.header = bytes_sending;
+
+      // Copy data into packet
+      memcpy(current_packet.data, &data[data_size - amount_to_send], current_packet.header * sizeof(uint16_t));
+      amount_to_send -= bytes_sending;
+
+      for (uint16_t counter = 0; counter < current_packet.header; counter++) {
+	  while (!(SPI1->SR & SPI_SR_TXE)) {};  //making sure previous transmission has completed
+	  SPI1->DR = current_packet.data[counter];
+      }
+
+      while (SPI1->SR & SPI_SR_BSY); //exit when busy flag goes low
+
+
+}
+
+
+
+
+
 void DAC_write(uint16_t dac_value) {
 	  uint16_t data = (dac_value | 0x1000);
 	  // while no status register flags and TxFIFO is empty
 	  while (!(SPI1->SR & SPI_SR_TXE)) {};
 	  SPI1->DR = data;
 }
+
 
 

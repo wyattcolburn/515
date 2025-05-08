@@ -29,8 +29,8 @@ extern "C" {
 /* Includes ------------------------------------------------------------------*/
 #include "stm32l4xx_hal.h"
 #define MAX_MESSAGE_SIZE 100
+#define MAX_DATA_SIZE 100
 #include <stdbool.h>  // Add this for bool type
-
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 

@@ -36,6 +36,7 @@ bool dataReceived = 0;
 //spi values
 
 
+
 char UART_MESSAGE[MAX_MESSAGE_SIZE];
 uint16_t SPI_REC;
 int main(void)
