@@ -54,22 +54,31 @@ int main(void)
   LPUART_Init();
   SPI_Slave_Init();
   LPUART_Print("hello world");
-  while (1)
-  {
-    if (messageReady) {
-	LPUART_Print(UART_MESSAGE);
-	messageReady = false;
-
+  while (1) {
+      // Display status of NSS pin
+      if ((GPIOD->IDR & GPIO_IDR_ID0) == 0) {
+          LPUART_Print("NSS is active (LOW)\r\n");
+      } else {
+          LPUART_Print("NSS is inactive (HIGH)\r\n");
       }
-    SPI_REC = SPI_Read_From_Peer();
-    if (SPI_REC) {
-  	print_uint16(SPI_REC);
 
-    }
+      // Check SPI status register
+      LPUART_Print("SPI2->SR = 0x");
+      print_uint16(SPI2->SR);
+      LPUART_Print("\r\n");
+
+      // Try to read regardless of status
+      SPI_REC = SPI2->DR;
+      LPUART_Print("Read attempt: ");
+      print_uint16(SPI_REC);
+      LPUART_Print("\r\n");
+
+      HAL_Delay(1000);
+  }
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
-}
+
 void USART2_INIT(void) {
     RCC->AHB2ENR |= (RCC_AHB2ENR_GPIOAEN); // enable clock for Tx and Rx
     RCC->APB2ENR |= (RCC_APB2ENR_USART1EN); //enable the clock register

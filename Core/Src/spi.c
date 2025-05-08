@@ -47,7 +47,7 @@ void SPI_Slave_Init(void) {
   // Configure GPIO pins
   GPIOD->MODER &= ~(GPIO_MODER_MODE0 | GPIO_MODER_MODE1 | GPIO_MODER_MODE4);
   // Set to alternate function mode (10)
-  GPIOD->MODER |= (GPIO_MODER_MODE0_1 | GPIO_MODER_MODE1_1 | GPIO_MODER_MODE3_4);
+  GPIOD->MODER |= (GPIO_MODER_MODE0_1 | GPIO_MODER_MODE1_1 | GPIO_MODER_MODE4_1);
 
   // Set to push-pull output type (0)
   GPIOD->OTYPER &= ~(GPIO_OTYPER_OT0 | GPIO_OTYPER_OT1 | GPIO_OTYPER_OT4);
@@ -75,7 +75,12 @@ void SPI_Slave_Init(void) {
   SPI2->CR2 &= ~(SPI_CR2_FRF);             // Motorola frame format
   SPI2->CR2 &= ~(SPI_CR2_NSSP);            // No NSS pulse in slave mode
   SPI2->CR2 |= SPI_CR2_DS;                 // 16-bit data
-  SPI2->CR2 |= (SPI_CR2_SSOE);            // Disable SS output in slave mode
+  //SPI2->CR2 |= (SPI_CR2_SSOE);            // Disable SS output in slave mode
+  SPI2->CR2 &= ~(SPI_CR2_DS);              // Clear DS bits first
+  SPI2->CR2 |= (0xF << SPI_CR2_DS_Pos);    // Set to 16-bit data (0xF is 1111 binary)
+
+  // Disable SS output in slave mode (this is a correction)
+  SPI2->CR2 &= ~(SPI_CR2_SSOE);
 
   // Enable SPI
   SPI2->CR1 |= SPI_CR1_SPE;                // Re-enable SPI for ops
