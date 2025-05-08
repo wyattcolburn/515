@@ -12,4 +12,8 @@ typedef struct {
 
 } SPI_Packet;
 
+void SPI_Send_Packet(uint16_t *data, uint16_t data_size);
+void MCU_1_Main(void);
+void MCU_2_Main(void);
+
 #endif

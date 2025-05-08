@@ -20,6 +20,9 @@
 #include "main.h"
 #include "LPUART.h"
 #include "spi.h"
+#include <string.h>
+
+
 
 #define USARTDIV 693 //80 MHz clock, baudrate 115200
 
@@ -39,6 +42,7 @@ bool dataReceived = 0;
 
 char UART_MESSAGE[MAX_MESSAGE_SIZE];
 uint16_t SPI_REC;
+
 int main(void)
 {
   /* USER CODE BEGIN 1 */
@@ -58,14 +62,12 @@ int main(void)
   SystemClock_Config();
   LPUART_Init();
   SPI_Slave_Init();
+  SPI_Master_Init();
   LPUART_Print("hello world");
 
   while (1) {
 
-      if (dataReceived) {
-
-	  print_uint16(SPI_ReceivedData);
-      }
+      MCU_2_Main();
       HAL_Delay(1000);
   }
 //  while (1) {

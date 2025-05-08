@@ -2,11 +2,22 @@
 // Spi functions
 #include "main.h" //??
 #include "spi.h"
+#include "LPUART.h"
 
 extern bool dataReceived;
 extern uint16_t SPI_ReceivedData;
 
+volatile bool header_packet;
+volatile bool receive_done;
+volatile uint16_t packet_data[4096];
+volatile uint16_t packet_len;
+volatile uint16_t packet_counter = 0;
 
+
+//MCU 1 is the master, SPI1 is sending to
+//MCU 2 slave, receives on SPI2
+
+//Just SPI1
 
 void SPI_Master_Init( void) {
   RCC->APB2ENR |= RCC_APB2ENR_SPI1EN;
@@ -97,8 +108,55 @@ void SPI_Slave_Init(void) {
 void SPI2_IRQHandler(void){
 
   if (SPI2->SR & SPI_SR_RXNE) {
-      SPI_ReceivedData = SPI2->DR;
-      dataReceived = true;
+
+      if (header_packet == false) {
+	  // this is the header packet which tells you length of packet
+	  packet_len = SPI2->DR;
+
+	  if (packet_len == 0) {
+	    dataReceived = true;
+	  }
+
+	  header_packet = true;
+      }
+
+      else {
+	  packet_data[packet_counter] = SPI2->DR;
+	  packet_counter++;
+
+	  if (packet_counter == packet_len) {
+	      header_packet = false;
+	  }
+      }
+  }
+}
+
+
+void MCU_1_Main(void) {
+
+  //send the packet
+  uint16_t test[] = {0,1,2,3,4,5}; //three transmissions 16 bit words
+  uint16_t test_size = sizeof(test) / sizeof(test[0]);
+
+  SPI_Send_Packet(test, test_size);
+
+  //7 transmissions: Header which is 6
+  // Data: 0,1,2,3,4,5
+  // Ender: 0000
+
+}
+
+void MCU_2_Main(void) {
+  //receive the packet
+
+  if (dataReceived) {
+      LPUART_Print("Have received Value");
+
+      for (int i = 0; i < packet_len; i++) {
+	 print_uint16(packet_data[i]);
+      }
+
+      dataReceived = false;
 
   }
 }
@@ -117,13 +175,17 @@ void SPI_Send_Packet(uint16_t *data, uint16_t data_size) { //first item of the a
   sending = true;
   size_t amount_to_send = data_size;
 
+
+  //sending the header
+
+
   while (sending) {
 
       if (amount_to_send == 0) {
 	  break;
       }
 
-      size_t bytes_sending = min(MAX_DATA_SIZE, amount_to_send);
+      size_t bytes_sending = (MAX_DATA_SIZE < amount_to_send) ? MAX_DATA_SIZE : amount_to_send;
 
       SPI_Packet current_packet;
       current_packet.header = bytes_sending;
@@ -131,14 +193,21 @@ void SPI_Send_Packet(uint16_t *data, uint16_t data_size) { //first item of the a
       // Copy data into packet
       memcpy(current_packet.data, &data[data_size - amount_to_send], current_packet.header * sizeof(uint16_t));
       amount_to_send -= bytes_sending;
+      while (!(SPI1->SR & SPI_SR_TXE)) {};  //making sure previous transmission has completed
+      SPI1->DR = current_packet.header;
+
 
       for (uint16_t counter = 0; counter < current_packet.header; counter++) {
 	  while (!(SPI1->SR & SPI_SR_TXE)) {};  //making sure previous transmission has completed
 	  SPI1->DR = current_packet.data[counter];
       }
 
-      while (SPI1->SR & SPI_SR_BSY); //exit when busy flag goes low
+  }
 
+  while (!(SPI1->SR & SPI_SR_TXE)) {};  //making sure previous transmission has completed
+  SPI1->DR = 0x0000;
+
+  while (SPI1->SR & SPI_SR_BSY); //exit when busy flag goes low
 
 }
 
