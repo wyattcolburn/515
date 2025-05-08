@@ -3,7 +3,8 @@
 #include "main.h" //??
 #include "spi.h"
 
-
+extern bool dataReceived;
+extern uint16_t SPI_ReceivedData;
 void SPI_Master_Init( void) {
   RCC->APB2ENR |= RCC_APB2ENR_SPI1EN;
   RCC->AHB2ENR |= (RCC_AHB2ENR_GPIOAEN | RCC_AHB2ENR_GPIOEEN);
@@ -84,7 +85,20 @@ void SPI_Slave_Init(void) {
 
   // Enable SPI
   SPI2->CR1 |= SPI_CR1_SPE;                // Re-enable SPI for ops
+
+  SPI2->CR2 |= SPI_CR2_RXNEIE; //enable receive interrupt
+  NVIC_SetPriority(SPI2_IRQn,1);  	   //enabling receive interupt
+  NVIC_EnableIRQ(SPI2_IRQn);
 }
+
+void SPI2_IRQHandler(void){
+
+  if (SPI2->SR & SPI_SR_RXNE) {
+      SPI_ReceivedData = SPI2->DR;
+      dataReceived = true;
+  }
+}
+
 uint16_t SPI_Read_From_Peer(void) {
     // Wait until receive buffer contains data
     while(!(SPI2->SR & SPI_SR_RXNE));

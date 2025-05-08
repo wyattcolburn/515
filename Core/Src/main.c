@@ -31,6 +31,10 @@ uint8_t x_cord;
 uint8_t y_cord;
 
 bool messageReady;
+uint16_t SPI_ReceivedData = 0;
+bool dataReceived = 0;
+//spi values
+
 
 char UART_MESSAGE[MAX_MESSAGE_SIZE];
 uint16_t SPI_REC;
@@ -54,27 +58,36 @@ int main(void)
   LPUART_Init();
   SPI_Slave_Init();
   LPUART_Print("hello world");
+
   while (1) {
-      // Display status of NSS pin
-      if ((GPIOD->IDR & GPIO_IDR_ID0) == 0) {
-          LPUART_Print("NSS is active (LOW)\r\n");
-      } else {
-          LPUART_Print("NSS is inactive (HIGH)\r\n");
+
+      if (dataReceived) {
+
+	  print_uint16(SPI_ReceivedData);
       }
-
-      // Check SPI status register
-      LPUART_Print("SPI2->SR = 0x");
-      print_uint16(SPI2->SR);
-      LPUART_Print("\r\n");
-
-      // Try to read regardless of status
-      SPI_REC = SPI2->DR;
-      LPUART_Print("Read attempt: ");
-      print_uint16(SPI_REC);
-      LPUART_Print("\r\n");
-
       HAL_Delay(1000);
   }
+//  while (1) {
+//      // Display status of NSS pin
+//      if ((GPIOD->IDR & GPIO_IDR_ID0) == 0) {
+//          LPUART_Print("NSS is active (LOW)\r\n");
+//      } else {
+//          LPUART_Print("NSS is inactive (HIGH)\r\n");
+//      }
+//
+//      // Check SPI status register
+//      LPUART_Print("SPI2->SR = 0x");
+//      print_uint16(SPI2->SR);
+//      LPUART_Print("\r\n");
+//
+//      // Try to read regardless of status
+//      SPI_REC = SPI2->DR;
+//      LPUART_Print("Read attempt: ");
+//      print_uint16(SPI_REC);
+//      LPUART_Print("\r\n");
+//
+//      HAL_Delay(1000);
+//  }
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
