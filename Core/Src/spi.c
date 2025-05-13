@@ -5,7 +5,7 @@
 #include "LPUART.h"
 
 extern bool dataReceived;
-extern uint16_t SPI_ReceivedData;
+
 
 volatile bool header_packet;
 volatile bool receive_done;
@@ -20,20 +20,21 @@ volatile uint16_t packet_counter = 0;
 //Just SPI1
 
 void SPI_Master_Init( void) {
-  RCC->APB2ENR |= RCC_APB2ENR_SPI1EN;
-  RCC->AHB2ENR |= (RCC_AHB2ENR_GPIOAEN | RCC_AHB2ENR_GPIOEEN);
 
-  GPIOE->MODER &= ~(GPIO_MODER_MODE12 | GPIO_MODER_MODE13 | GPIO_MODER_MODE15);
-  // set MODE4/5/7 to 10 (alternate function)
-  GPIOE->MODER |= (GPIO_MODER_MODE12_1 | GPIO_MODER_MODE13_1 | GPIO_MODER_MODE15_1);
-  // push-pull (0)
-  GPIOE->OTYPER &= ~(GPIO_OTYPER_OT12 | GPIO_OTYPER_OT13 | GPIO_OTYPER_OT15);
-  // low speed (0)
-  GPIOE->OSPEEDR &= ~(GPIO_OSPEEDR_OSPEED12 | GPIO_OSPEEDR_OSPEED13 | GPIO_OSPEEDR_OSPEED15);
-  // no pull up / no pull down (00)
-  GPIOE->PUPDR &= ~(GPIO_PUPDR_PUPD12 | GPIO_PUPDR_PUPD13 | GPIO_PUPDR_PUPD15);
+   RCC->APB2ENR |= RCC_APB2ENR_SPI1EN;
+   RCC->AHB2ENR |= (RCC_AHB2ENR_GPIOAEN | RCC_AHB2ENR_GPIOEEN);
 
-  GPIOE->AFR[1] |= (5 << GPIO_AFRH_AFSEL12_Pos |
+   GPIOE->MODER &= ~(GPIO_MODER_MODE12 | GPIO_MODER_MODE13 | GPIO_MODER_MODE15);
+   // set MODE4/5/7 to 10 (alternate function)
+   GPIOE->MODER |= (GPIO_MODER_MODE12_1 | GPIO_MODER_MODE13_1 | GPIO_MODER_MODE15_1);
+   // push-pull (0)
+   GPIOE->OTYPER &= ~(GPIO_OTYPER_OT12 | GPIO_OTYPER_OT13 | GPIO_OTYPER_OT15);
+   // low speed (0)
+   GPIOE->OSPEEDR &= ~(GPIO_OSPEEDR_OSPEED12 | GPIO_OSPEEDR_OSPEED13 | GPIO_OSPEEDR_OSPEED15);
+   // no pull up / no pull down (00)
+   GPIOE->PUPDR &= ~(GPIO_PUPDR_PUPD12 | GPIO_PUPDR_PUPD13 | GPIO_PUPDR_PUPD15);
+
+   GPIOE->AFR[1] |= (5 << GPIO_AFRH_AFSEL12_Pos |
 					  5 << GPIO_AFRH_AFSEL13_Pos | //SCL
 					  5 << GPIO_AFRH_AFSEL15_Pos); //MOSI
 
@@ -41,7 +42,10 @@ void SPI_Master_Init( void) {
    SPI1->CR1 &= ~( SPI_CR1_RXONLY );          	// recv-only OFF
    SPI1->CR1 &= ~( SPI_CR1_LSBFIRST );        	// data bit order MSb:LSb
    SPI1->CR1 &= ~( SPI_CR1_CPOL | SPI_CR1_CPHA ); // SCLK polarity:phase = 0:0
-   SPI1->CR1 &=	 ~(SPI_CR1_MSTR);              	// MCU is SPI Slave
+   SPI1->CR1 |=	 (SPI_CR1_MSTR);              	// MCU is SPI Slave
+   SPI1->CR1 |= SPI_CR1_BR_1;  // Divide clock by 8
+
+
    // CR2 (reset value = 0x0700 : 8b data)
    SPI1->CR2 &= ~( SPI_CR2_TXEIE | SPI_CR2_RXNEIE ); // disable FIFO intrpts
    SPI1->CR2 &= ~( SPI_CR2_FRF);              	// Moto frame format
@@ -85,6 +89,8 @@ void SPI_Slave_Init(void) {
   SPI2->CR1 &= ~(SPI_CR1_CPOL | SPI_CR1_CPHA); // SCLK polarity:phase = 0:0
   SPI2->CR1 &= ~(SPI_CR1_MSTR);            // MCU is SPI Slave
 
+
+
   // Configure CR2
   SPI2->CR2 &= ~(SPI_CR2_TXEIE | SPI_CR2_RXNEIE); // Disable FIFO interrupts
   SPI2->CR2 &= ~(SPI_CR2_FRF);             // Motorola frame format
@@ -104,41 +110,51 @@ void SPI_Slave_Init(void) {
   NVIC_SetPriority(SPI2_IRQn,1);  	   //enabling receive interupt
   NVIC_EnableIRQ(SPI2_IRQn);
 }
+void SPI2_IRQHandler(void) {
+  if (SPI2->SR & SPI_SR_RXNE) { //only happens when NSS is low?
+      volatile uint16_t received_byte = SPI2->DR;
 
-void SPI2_IRQHandler(void){
+      // Add NSS status check
+      bool nss_active = !(GPIOD->IDR & GPIO_IDR_ID0);  // Assuming NSS is on PD0, 1 for HIGh, 0 if LOW
 
-  if (SPI2->SR & SPI_SR_RXNE) {
+      // If NSS is inactive (high), reset state machine
+      if (!nss_active) {
+          header_packet = false;
+          packet_counter = 0;
 
-      if (header_packet == false) {
-	  // this is the header packet which tells you length of packet
-	  packet_len = SPI2->DR;
-
-	  if (packet_len == 0) {
-	    dataReceived = true;
-	  }
-
-	  header_packet = true;
+          LPUART_Print("NSS gets hit");
+          return;  // Skip processing this byte
       }
 
+      // Normal protocol handling (unchanged)
+      if (header_packet == false) {
+          packet_len = received_byte;
+          header_packet = true;
+          if (packet_len == 0) {
+              dataReceived = true;
+              header_packet = false;
+          }
+      }
       else {
-	  packet_data[packet_counter] = SPI2->DR;
-	  packet_counter++;
-
-	  if (packet_counter == packet_len) {
-	      header_packet = false;
-	  }
+          packet_data[packet_counter] = received_byte;
+          packet_counter++;
+          if (packet_counter == packet_len) {
+              header_packet = false;
+              dataReceived = true;
+              packet_counter = 0;
+          }
       }
   }
 }
 
-
 void MCU_1_Main(void) {
 
-  //send the packet
-  uint16_t test[] = {0,1,2,3,4,5}; //three transmissions 16 bit words
-  uint16_t test_size = sizeof(test) / sizeof(test[0]);
+  char* message = "hello franco";
+  uint16_t len = strlen(message);
+  uint16_t output_Array[len];
+  string_to_array(message, len, output_Array);
 
-  SPI_Send_Packet(test, test_size);
+  SPI_Send_Packet(output_Array, len);
 
   //7 transmissions: Header which is 6
   // Data: 0,1,2,3,4,5
@@ -146,16 +162,22 @@ void MCU_1_Main(void) {
 
 }
 
+void string_to_array(char* string, uint16_t len, uint16_t* output_array) {
+
+  for (uint16_t counter = 0; counter < len; counter++ ) {
+    output_array[counter] = (uint16_t)string[counter];
+  }
+}
 void MCU_2_Main(void) {
   //receive the packet
 
   if (dataReceived) {
-      LPUART_Print("Have received Value");
+      LPUART_Print("Packet has been received : ");
 
       for (int i = 0; i < packet_len; i++) {
 	 print_uint16(packet_data[i]);
       }
-
+      LPUART_Print("\r\n");
       dataReceived = false;
 
   }

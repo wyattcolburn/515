@@ -67,7 +67,7 @@ int main(void)
 
   while (1) {
 
-      MCU_2_Main();
+      MCU_1_Main();
       HAL_Delay(1000);
   }
 //  while (1) {
