@@ -65,12 +65,12 @@ int main(void)
   SPI_Slave_Init();
   SPI_Master_Init();
   LPUART_Print("hello world");
-  UART_init();
+  UART3_init();
   char* uart_message = "hi uart";
   while (1) {
 
       //MCU_1_Main();
-      USART_TransmitString(uart_message);
+      USART3_TransmitString(uart_message);
       HAL_Delay(1000);
   }
 //  while (1) {

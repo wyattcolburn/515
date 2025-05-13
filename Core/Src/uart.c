@@ -1,3 +1,7 @@
+
+#include "LPUART.h"
+#include "uart.h"
+
 void UART3_init(void) {
     // Using USART3: PB10 (TX), PB11 (RX)
     // Enable GPIOB and USART3 clocks
