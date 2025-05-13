@@ -70,3 +70,12 @@ void USART1_IRQHandler(void){
       }
   }
 }
+
+void USART_TransmitString(const char* str) {
+    while (*str) {
+        while(!(USART1->ISR & USART_ISR_TXE));
+        USART1->TDR = *str++;
+    }
+    // Wait for last byte to complete
+    while(!(USART1->ISR & USART_ISR_TC));
+}
