@@ -1,11 +1,13 @@
 #include "main.h"
 #include "LPUART.h"
 #include "uart.h"
-volatile bool header_packet;
-volatile bool receive_done;
-volatile uint16_t packet_data[4096];
-volatile uint16_t packet_len;
-volatile uint16_t packet_counter = 0;
+
+extern bool UART_dataReceived;
+volatile bool UART_header_packet;
+volatile bool UART_receive_done;
+volatile uint8_t UART_packet_data[4096];
+volatile uint16_t UART_packet_len;
+volatile uint16_t UART_packet_counter = 0;
 void UART3_init(void) {
     // Using USART3: PB10 (TX), PB11 (RX)
     // Enable GPIOB and USART3 clocks
@@ -63,22 +65,22 @@ void USART3_IRQHandler(void) {
     if (USART3->ISR & USART_ISR_RXNE) {
         volatile uint8_t charRecv = USART3->RDR;
 
-        if (header_packet == false) {
-            packet_len = charRecv;
-            header_packet = true;
-            if (packet_len == 0) {
-        	dataReceived = true;
-        	header_packet = false;
+        if (UART_header_packet == false) {
+            UART_packet_len = charRecv;
+            UART_header_packet = true;
+            if (UART_packet_len == 0) {
+        	UART_dataReceived = true;
+        	UART_header_packet = false;
             }
         }
 
         else {
-            packetData[packet_counter] = charRecv;
-            packet_counter++;
-            if (packet_count == packet_len) {
-        	header_packet = false;
-        	dataReceived = true;
-        	packet_counter = 0;
+            UART_packet_data[UART_packet_counter] = charRecv;
+            UART_packet_counter++;
+            if (UART_packet_counter == UART_packet_len) {
+        	UART_header_packet = false;
+        	UART_dataReceived = true;
+        	UART_packet_counter = 0;
             }
         }
 

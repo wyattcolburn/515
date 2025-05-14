@@ -35,6 +35,7 @@ uint8_t x_cord;
 uint8_t y_cord;
 
 bool messageReady;
+bool UART_dataReceived;
 uint16_t SPI_ReceivedData = 0;
 bool dataReceived = 0;
 //spi values
