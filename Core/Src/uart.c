@@ -1,7 +1,11 @@
-
+#include "main.h"
 #include "LPUART.h"
 #include "uart.h"
-
+volatile bool header_packet;
+volatile bool receive_done;
+volatile uint16_t packet_data[4096];
+volatile uint16_t packet_len;
+volatile uint16_t packet_counter = 0;
 void UART3_init(void) {
     // Using USART3: PB10 (TX), PB11 (RX)
     // Enable GPIOB and USART3 clocks
@@ -55,22 +59,32 @@ void UART3_init(void) {
 }
 
 void USART3_IRQHandler(void) {
-    uint8_t charRecv;
+
     if (USART3->ISR & USART_ISR_RXNE) {
-        charRecv = USART3->RDR;
-        switch (charRecv) {
-            case '\r':
-                // If you want to send through USART3 instead of LPUART
-                USART3_TransmitString("Enter\r\n");
-                break;
-            default:
-                // Echo character back through USART3
-                while(!(USART3->ISR & USART_ISR_TXE));
-                USART3->TDR = charRecv;
-                break;
+        volatile uint8_t charRecv = USART3->RDR;
+
+        if (header_packet == false) {
+            packet_len = charRecv;
+            header_packet = true;
+            if (packet_len == 0) {
+        	dataReceived = true;
+        	header_packet = false;
+            }
         }
+
+        else {
+            packetData[packet_counter] = charRecv;
+            packet_counter++;
+            if (packet_count == packet_len) {
+        	header_packet = false;
+        	dataReceived = true;
+        	packet_counter = 0;
+            }
+        }
+
     }
 }
+
 
 void USART3_TransmitString(const char* str) {
     while (*str) {
@@ -79,4 +93,44 @@ void USART3_TransmitString(const char* str) {
     }
     // Wait for last byte to complete
     while(!(USART3->ISR & USART_ISR_TC));
+}
+
+void UART_Send_Packet(uint8_t *data, uint16_t data_size) {
+
+  bool sending;
+  sending = true;
+  size_t amount_to_send = data_size;
+
+  while (sending) {
+
+      if (amount_to_send == 0) {
+	  break;
+      }
+      size_t bytes_sending = (MAX_DATA_SIZE < amount_to_send) ? MAX_DATA_SIZE : amount_to_send;
+
+      UART_Packet current_packet;
+      current_packet.header = (uint8_t)bytes_sending;
+
+      memcpy(current_packet.data, &data[data_size - amount_to_send], current_packet.header);
+      amount_to_send -= bytes_sending;
+      while(!(USART3->ISR & USART_ISR_TXE));
+             USART3->TDR = current_packet.header;
+             LPUART_Print("Header is : ");
+                   print_uint16(current_packet.header);
+                   LPUART_Print("   \n");
+
+
+      for (uint8_t transmission_counter = 0; transmission_counter < current_packet.header; transmission_counter++) {
+	  while(!(USART3->ISR & USART_ISR_TXE)); //making sure previous transmission has completed
+	  USART3->TDR = current_packet.data[transmission_counter];
+	  LPUART_Print("Value : ");
+	   print_uint16(current_packet.data[transmission_counter]);
+	   LPUART_Print("   \n");
+      }
+
+
+  }
+  while(!(USART3->ISR & USART_ISR_TXE)); //making sure previous transmission has completed
+  USART3->TDR = 0x00;
+  //send 0000
 }

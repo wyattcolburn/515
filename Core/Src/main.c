@@ -62,16 +62,23 @@ int main(void)
   /* Configure the system clock */
   SystemClock_Config();
   LPUART_Init();
-  SPI_Slave_Init();
-  SPI_Master_Init();
+  //SPI_Slave_Init();
+  //SPI_Master_Init();
   LPUART_Print("hello world");
   UART3_init();
-  char* uart_message = "hi uart";
+  char* uart_message = "hello franco\r\n";
+  uint16_t len = strlen(uart_message);
+  uint8_t output_array[len];
+  string_to_array_8bit(uart_message, len, output_array);
+
+
   while (1) {
 
       //MCU_1_Main();
-      USART3_TransmitString(uart_message);
+      UART_Send_Packet(output_array, len);
+
       HAL_Delay(1000);
+
   }
 //  while (1) {
 //      // Display status of NSS pin
