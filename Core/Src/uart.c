@@ -125,12 +125,10 @@ void UART_Send_Packet(uint8_t *data, uint16_t data_size) {
       for (uint8_t transmission_counter = 0; transmission_counter < current_packet.header; transmission_counter++) {
 	  while(!(USART3->ISR & USART_ISR_TXE)); //making sure previous transmission has completed
 	  USART3->TDR = current_packet.data[transmission_counter];
-	  LPUART_Print("Value : ");
-	   print_uint16(current_packet.data[transmission_counter]);
-	   LPUART_Print("   \n");
+
       }
 
-
+      HAL_Delay(100);
   }
   while(!(USART3->ISR & USART_ISR_TXE)); //making sure previous transmission has completed
   USART3->TDR = 0x00;

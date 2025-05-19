@@ -67,7 +67,7 @@ int main(void)
   //SPI_Master_Init();
   LPUART_Print("hello world");
   UART3_init();
-  char* uart_message = "hello franco\r\n";
+  char* uart_message = "Maman died today. Or yesterday maybe, I don't know. I got a telegram from the home: Mother deceased. Funeral Tomorrow. Faithfully yours. That doesn't mean anything. Maybe it was yesterday. The old people's home is at Marengo, about eighty kilometers from Algiers, I'll take the two o'clock bus and get there in the afternoon. That way I can be there for the vigil and come back tomorrow night. I asked my boss for two days off and there was no way";
   uint16_t len = strlen(uart_message);
   uint8_t output_array[len];
   string_to_array_8bit(uart_message, len, output_array);
@@ -78,7 +78,7 @@ int main(void)
       //MCU_1_Main();
       UART_Send_Packet(output_array, len);
 
-      HAL_Delay(1000);
+      HAL_Delay(5000);
 
   }
 //  while (1) {
