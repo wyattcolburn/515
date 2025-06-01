@@ -22,8 +22,8 @@
 #include "uart.h"
 #include "spi.h"
 #include <string.h>
-
-
+#include "timer.h"
+#include <stdio.h>
 
 #define USARTDIV 693 //80 MHz clock, baudrate 115200
 
@@ -34,53 +34,23 @@ void SystemClock_Config(void);
 uint8_t x_cord;
 uint8_t y_cord;
 
-bool messageReady;
-bool UART_dataReceived;
-uint16_t SPI_ReceivedData = 0;
-bool dataReceived = 0;
-//spi values
-
-
-
-char UART_MESSAGE[MAX_MESSAGE_SIZE];
-uint16_t SPI_REC;
-
 int main(void)
 {
-  /* USER CODE BEGIN 1 */
-
-  /* USER CODE END 1 */
-
-  /* MCU Configuration--------------------------------------------------------*/
-
-  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
-
-  /* USER CODE BEGIN Init */
-
-  /* USER CODE END Init */
-
-  /* Configure the system clock */
   SystemClock_Config();
   LPUART_Init();
+
   //SPI_Slave_Init();
   //SPI_Master_Init();
   LPUART_Print("hello world");
+
   UART3_init();
-  char* uart_message = "Maman died today. Or yesterday maybe, I don't know. I got a telegram from the home: Mother deceased. Funeral Tomorrow. Faithfully yours. That doesn't mean anything. Maybe it was yesterday. The old people's home is at Marengo, about eighty kilometers from Algiers, I'll take the two o'clock bus and get there in the afternoon. That way I can be there for the vigil and come back tomorrow night. I asked my boss for two days off and there was no way";
-  uint16_t len = strlen(uart_message);
-  uint8_t output_array[len];
-  string_to_array_8bit(uart_message, len, output_array);
+  init_timer();
+
+  UART3_mcu1_test();
+  UART3_mcu2_test();
 
 
-  while (1) {
-
-      //MCU_1_Main();
-      UART_Send_Packet(output_array, len);
-
-      HAL_Delay(5000);
-
-  }
 //  while (1) {
 //      // Display status of NSS pin
 //      if ((GPIOD->IDR & GPIO_IDR_ID0) == 0) {
@@ -106,74 +76,6 @@ int main(void)
   }
   /* USER CODE END 3 */
 
-void USART2_INIT(void) {
-    RCC->AHB2ENR |= (RCC_AHB2ENR_GPIOAEN); // enable clock for Tx and Rx
-    RCC->APB2ENR |= (RCC_APB2ENR_USART1EN); //enable the clock register
-
-    GPIOA->AFR[0] &= ~(GPIO_AFRL_AFRL2);
-    GPIOA->AFR[0] |= (0x7 << GPIO_AFRL_AFSEL2_Pos);
-
-    GPIOA->AFR[0] &= ~(GPIO_AFRL_AFRL3);
-    GPIOA->AFR[0] |= (0x7 << GPIO_AFRL_AFSEL3_Pos);
-
-    // set OTYPE to PP (0) for both Tx and Rx
-    GPIOA->OTYPER &= ~(GPIO_OTYPER_OT2);
-    GPIOA->OTYPER &= ~(GPIO_OTYPER_OT3);
-
-    // set OSPEED to low (00) for both Tx and Rx
-    GPIOA->OSPEEDR &= ~(GPIO_OSPEEDR_OSPEED2);
-    GPIOA->OSPEEDR &= ~(GPIO_OSPEEDR_OSPEED3);
-
-    // set PUPD to no resistors (00) for both Tx and Rx
-    GPIOA->PUPDR &= ~(GPIO_PUPDR_PUPD2);
-    GPIOA->PUPDR &= ~(GPIO_PUPDR_PUPD3);
-
-    // set MODER to AF
-    GPIOA->MODER &= ~(GPIO_MODER_MODE2); 	// clear MODER
-    GPIOA->MODER |= GPIO_MODER_MODE2_1;		// set to 10 (AF)
-
-    GPIOA->MODER &= ~(GPIO_MODER_MODE3);	// clear MODER
-    GPIOA->MODER |= GPIO_MODER_MODE3_1;		// set to 10 (AF)
-
-    /* END GPIO -------------------------------------------------------------*/
-
-    // Program the M bits in USART_CR1
-    USART2->CR1 &= ~(USART_CR1_M1);
-    USART2->CR1 &= ~(USART_CR1_M0);
-
-    // set the baud rate
-    USART2->BRR = USARTDIV;
-
-    // set stop bits to 1
-    USART2->CR2 &= ~(USART_CR2_STOP);	// set to 00 (1 stop bit)]
-
-    // enable the USART
-    USART2->CR1 |= (USART_CR1_UE);
-
-    // send an idle frame as first transmission
-
-    USART2->CR1 |= (USART_CR1_TE);
-
-    // enable reception int errupt
-    USART2->CR1 |= (USART_CR1_RXNEIE);
-    USART2->RQR |= (USART_RQR_RXFRQ);	// clear flag
-
-    // enable the receiver
-    USART2->CR1 |= (USART_CR1_RE);
-
-  }
-
-
-void UART_print(char string[])
-{
-  int i = 0;
-  while (string[i] != '\0')
-  {
-	while(!(USART2->ISR & USART_ISR_TC)); // wait for TC to be equal to 1
-	USART2->TDR = string[i]; 			   // write to UART_TDR
-	i++;
-  }
-}
 void SystemClock_Config(void)
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};

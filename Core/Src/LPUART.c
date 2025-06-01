@@ -1,5 +1,4 @@
 /*
-///**
 //  ******************************************************************************
 //  * @file           : LPUART.c
 //  * @brief          : This is the source file to initialize the LPUART on the
@@ -8,12 +7,9 @@
  *
 //  authors: Wyatt Colburn -wdcolbur@calpoly.edu
  * 			 Lin Knudsen
-
-
 */
-#include "lpuart.h"
-
-
+#include "LPUART.h"
+#include <stdio.h>
 #include <string.h>
 
 #define LPUART_PORT GPIOG
@@ -22,7 +18,7 @@ extern uint8_t y_cord;
 
 extern char UART_MESSAGE[MAX_MESSAGE_SIZE];
 uint8_t bufferCount;
-extern bool messageReady;
+volatile bool messageReady;
 
 void LPUART_Init(void) {
 	PWR->CR2 |= (PWR_CR2_IOSV);              // power avail on PG[15:2] (LPUART1)

@@ -16,7 +16,4 @@ void SPI_Send_Packet(uint16_t *data, uint16_t data_size);
 
 void MCU_1_Main(void);
 void MCU_2_Main(void);
-void string_to_array(char* string, uint16_t len, uint16_t* output_array);
-void string_to_array_8bit(char* string, uint16_t len, uint8_t* output_array);
-
 #endif

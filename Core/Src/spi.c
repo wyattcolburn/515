@@ -3,10 +3,10 @@
 #include "main.h" //??
 #include "spi.h"
 #include "LPUART.h"
+#include "utils.h"
+#include <string.h>
 
-extern bool dataReceived;
-
-
+volatile bool dataReceived;
 volatile bool header_packet;
 volatile bool receive_done;
 volatile uint16_t packet_data[4096];
@@ -162,19 +162,6 @@ void MCU_1_Main(void) {
 
 }
 
-void string_to_array(char* string, uint16_t len, uint16_t* output_array) {
-
-  for (uint16_t counter = 0; counter < len; counter++ ) {
-    output_array[counter] = (uint16_t)string[counter];
-  }
-}
-
-void string_to_array_8bit(char* string, uint16_t len, uint8_t* output_array) {
-
-  for (uint16_t counter = 0; counter < len; counter++ ) {
-    output_array[counter] = (uint8_t)string[counter];
-  }
-}
 void MCU_2_Main(void) {
   //receive the packet
 
