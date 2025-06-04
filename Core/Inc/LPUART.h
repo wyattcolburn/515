@@ -35,6 +35,7 @@
 
 void LPUART_Init(void);
 void LPUART_Print(const char* message);
+void LPUART_print_uint8_matrix(uint8_t *buffer, int rows, int cols);
 void LPUART_ESC_Print(const char* message);
 void delay_us(const uint32_t);
 void print_uint16(uint16_t value);

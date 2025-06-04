@@ -71,6 +71,21 @@ void LPUART_Print( const char* message ) {
    }
 }
 
+void LPUART_print_uint8_matrix(uint8_t *buffer, int rows, int cols) {
+    char buf[32];
+    int index = 0;
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < cols; j++) {
+            sprintf(buf, "%d|", buffer[index]);
+            LPUART_Print(buf);
+            index++;
+        }
+        LPUART_Print("\r\n");
+    }
+    LPUART_Print("\r\n");
+}
+
+
 void LPUART_ESC_Print( const char* message ) {
 	const char * escChar = "\x1B"; // Escape character
 	LPUART_Print(escChar);

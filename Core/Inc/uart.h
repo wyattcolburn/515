@@ -14,11 +14,18 @@ typedef struct __attribute__((packed)){
 
 } UART_Packet;
 
+
+#define BAUDRATE 115200 // baudrate 115200 for 4Mhz
+#define USARTDIV (4000000 / BAUDRATE);
+//#define USARTDIV 8889
 void UART3_init(void);
 void USART3_TransmitString(const char* str);
 void UART_Send_Packet(uint8_t * data, uint16_t data_size);
-void UART3_mcu1_main(void);
-void UART3_mcu2_main(void);
+void UART3_mcu1_solo_matrix(void);
+void UART3_mcu1_test(void);
+void UART3_mcu2_test(void);
+void UART3_mcu1_matrix(void);
+void UART3_mcu2_matrix(void);
 
 
 

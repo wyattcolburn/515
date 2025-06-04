@@ -7,6 +7,7 @@
 #include "timer.h"
 #include "main.h"
 #include "LPUART.h"
+#include <stdio.h>
 
 void init_timer(void) {
    RCC->APB1ENR1 |= RCC_APB1ENR1_TIM2EN;
@@ -30,7 +31,7 @@ uint32_t stop_timer(void){
 	// Stops timer and returns current timer value
 	uint32_t ret = TIM2->CNT;
 	TIM2->CR1 &= ~TIM_CR1_CEN; // enable
-	return ret;
+	return ret / 4;
 }
 
 void print_timer(void){

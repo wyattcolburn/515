@@ -24,9 +24,7 @@
 #include <string.h>
 #include "timer.h"
 #include <stdio.h>
-
-#define USARTDIV 693 //80 MHz clock, baudrate 115200
-
+#include "utils.h"
 
 
 /* Private function prototypes -----------------------------------------------*/
@@ -42,13 +40,46 @@ int main(void)
 
   //SPI_Slave_Init();
   //SPI_Master_Init();
-  LPUART_Print("hello world");
-
   UART3_init();
   init_timer();
+  init_user_button();
 
-  UART3_mcu1_test();
-  UART3_mcu2_test();
+
+  uint32_t sysclk = HAL_RCC_GetSysClockFreq();
+  uint32_t hclk   = HAL_RCC_GetHCLKFreq();
+  uint32_t pclk1  = HAL_RCC_GetPCLK1Freq();
+  uint32_t pclk2  = HAL_RCC_GetPCLK2Freq();
+  char buf[164];
+  sprintf(buf, "SYSCLK = %lu Hz\r\nHCLK = %lu Hz\r\nPCLK1 = %lu Hz\r\nPCLK2 = %lu Hz\r\n", sysclk, hclk, pclk1, pclk2);
+//  LPUART_Print(buf);
+
+  uint8_t mode = 2; // 0 for single board, 1 for MCU1, 2 for MCU2
+  // debug baud
+  while(1){
+	  switch(mode){
+	  	  case 0:
+	  		  if(is_pressed()){
+	  			  LPUART_Print("starting op\r\n");
+	  			  UART3_mcu1_solo_matrix();
+	  		  }
+	  		  break;
+	  	  case 1:
+	  		  if(is_pressed()){
+	  			  LPUART_Print("starting op\r\n");
+				  UART3_mcu1_matrix();
+			  }
+	  		  break;
+	  	  case 2:
+	  		  UART3_mcu2_matrix();
+	  		  break;
+	  	  default:
+	  		  break;
+	  }
+
+//
+  }
+}
+
 
 
 //  while (1) {
@@ -73,7 +104,7 @@ int main(void)
 //      HAL_Delay(1000);
 //  }
     /* USER CODE BEGIN 3 */
-  }
+//  }
   /* USER CODE END 3 */
 
 void SystemClock_Config(void)
