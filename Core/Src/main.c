@@ -25,6 +25,7 @@
 #include "timer.h"
 #include <stdio.h>
 #include "utils.h"
+#include "pp.h"
 
 
 /* Private function prototypes -----------------------------------------------*/
@@ -36,6 +37,7 @@ int main(void)
 {
   HAL_Init();
   SystemClock_Config();
+  __enable_irq();                          // enable global interrupts)
   LPUART_Init();
 
   //SPI_Slave_Init();
@@ -55,29 +57,33 @@ int main(void)
 
   uint8_t mode = 2; // 0 for single board, 1 for MCU1, 2 for MCU2
   // debug baud
+  init_nibble_protocol();
   while(1){
-	  switch(mode){
-	  	  case 0:
-	  		  if(is_pressed()){
-	  			  LPUART_Print("starting op\r\n");
-	  			  UART3_mcu1_solo_matrix();
-	  		  }
-	  		  break;
-	  	  case 1:
-	  		  if(is_pressed()){
-	  			  LPUART_Print("starting op\r\n");
-				  UART3_mcu1_matrix();
-			  }
-	  		  break;
-	  	  case 2:
-	  		  UART3_mcu2_matrix();
-	  		  break;
-	  	  default:
-	  		  break;
-	  }
-
-//
+	  pp_MCU1_main();
+	  HAL_Delay(50);
   }
+
+//  while(1){
+//	  switch(mode){
+//	  	  case 0:
+//	  		  if(is_pressed()){
+//	  			  LPUART_Print("starting op\r\n");
+//	  			  UART3_mcu1_solo_matrix();
+//	  		  }
+//	  		  break;
+//	  	  case 1:
+//	  		  if(is_pressed()){
+//	  			  LPUART_Print("starting op\r\n");
+//				  UART3_mcu1_matrix();
+//			  }
+//	  		  break;
+//	  	  case 2:
+//	  		  UART3_mcu2_matrix();
+//	  		  break;
+//	  	  default:
+//	  		  break;
+//	  }
+//  }
 }
 
 
@@ -125,7 +131,7 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_MSI;
   RCC_OscInitStruct.MSIState = RCC_MSI_ON;
   RCC_OscInitStruct.MSICalibrationValue = 0;
-  RCC_OscInitStruct.MSIClockRange = RCC_MSIRANGE_6;
+  RCC_OscInitStruct.MSIClockRange = RCC_MSIRANGE_8;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {

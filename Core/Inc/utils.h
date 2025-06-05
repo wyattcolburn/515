@@ -17,7 +17,7 @@
 
 
 // Size of the array:
-#define MATRIX_SIZE 25
+#define MATRIX_SIZE 10
 
 void populate_matrix(uint8_t A[MATRIX_SIZE][MATRIX_SIZE], uint8_t B[MATRIX_SIZE][MATRIX_SIZE]);
 void matrix_multiply(uint8_t A[][MATRIX_SIZE], uint8_t B[][MATRIX_SIZE], uint16_t C[][MATRIX_SIZE], int start_row, int end_row);

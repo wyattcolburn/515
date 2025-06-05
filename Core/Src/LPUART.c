@@ -54,7 +54,6 @@ void LPUART_Init(void) {
 	/* USER: set baud rate register (LPUART1->BRR) */
 
 	NVIC->ISER[2] = (1 << (LPUART1_IRQn & 0x1F));   // enable LPUART1 ISR
-	__enable_irq();                          // enable global interrupts)
 
 	LPUART_ESC_Print(CLEAR_SCREEN);
 	LPUART_ESC_Print(CURSOR_HOME);
