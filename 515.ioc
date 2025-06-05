@@ -85,4 +85,4 @@ RCC.VCOOutputFreq_Value=32000000
 RCC.VCOSAI1OutputFreq_Value=32000000
 RCC.VCOSAI2OutputFreq_Value=32000000
 board=custom
-isbadioc=true
+isbadioc=false
